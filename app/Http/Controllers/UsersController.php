@@ -5,16 +5,23 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Requests;
+use Illuminate\Support\Facades\Auth;
+
 class UsersController extends Controller
 {
 
 
-    public function create(){
-        return view('users.create');
+    public function __construct()
+    {
+        $this->middleware('auth', [
+            'except' => ['show', 'create', 'store']
+        ]);
     }
 
-
-
+    public function create()
+    {
+        return view('users.create');
+    }
 
 
 //    第一个参数声明这是一个模型,第二个参数是一个变量
@@ -24,8 +31,9 @@ class UsersController extends Controller
     }
 
 
-    public function store(Request $request){
-        $this->validate($request,[
+    public function store(Request $request)
+    {
+        $this->validate($request, [
             'name' => 'required|max:50',
             'email' => 'required|email|unique:users|max:255',
             'password' => 'required|confirmed|min:6'
@@ -35,9 +43,35 @@ class UsersController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
         ]);
-
+        Auth::login($user);
         session()->flash('success', '欢迎，您将在这里开启一段新的旅程~');
         return redirect()->route('users.show', [$user]);
     }
 
+    public function edit(User $user)
+    {
+        return view('users.edit', compact('user'));
+    }
+
+    public function update(User $user, Request $request)
+    {
+        $this->validate($request, [
+            'name' => 'required|max:50',
+            'password' => 'nullable|confirmed|min:6'
+        ]);
+
+
+        $data = [];
+        $data['name'] = $request->name;
+        if ($request->password) {
+            $data['password'] = $request->password;
+        }
+
+        $user->update($data);
+
+
+        session()->flash('success', '更新成功');
+        return redirect()->route('users.show', $user->id);
+
+    }
 }

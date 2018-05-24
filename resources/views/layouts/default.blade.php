@@ -22,6 +22,6 @@
     @include('layouts._foots')
 </div>
 
-
+<script src="/js/app.js"></script>
 </body>
 </html>
